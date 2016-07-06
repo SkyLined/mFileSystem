@@ -24,6 +24,9 @@ dsInvalidPathCharacterTranslationMap = {
   u"|":   u"\u01C0", # LATIN LETTER DENTAL CLICK
 };
 
+def fsLocalPath(*asPathSections):
+  return fsFullPath(os.getcwd(), *asPathSections);
+
 def fsTranslateToValidName(sName):
   return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
 
