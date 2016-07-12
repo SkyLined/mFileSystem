@@ -27,7 +27,7 @@ dsInvalidPathCharacterTranslationMap = {
 };
 
 def fsLocalPath(*asPathSections):
-  return fsFullPath(os.getcwd(), *asPathSections);
+  return fsFullPath(os.getcwdu(), *asPathSections);
 
 def fsTranslateToValidName(sName):
   return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
