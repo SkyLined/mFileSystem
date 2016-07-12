@@ -1,4 +1,6 @@
 import os, shutil, time;
+# To solve any unicode errors you may get, add this line (without the "#") to your main python script:
+# import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
 
 # Try again almost immediately, then wait longer and longer
 auPauses = [
@@ -52,31 +54,31 @@ def ftFile_sName_and_sExtension(*asPathSections):
 def fsRelativePathFromTo(sFromPath, sToPath):
   return os.path.relpath(fsFullPath(sToPath), fsFullPath(sFromPath));
 
-def fbIsFolder(*asPathSections, **dxArguments):
+def febIsFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
   for uPause in auPauses:
     try:
       return os.path.isdir(sPath);
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return None;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to check if folder %s exists, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   return os.path.isdir(sPath);
 
-def fbIsFile(*asPathSections, **dxArguments):
+def febIsFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
   for uPause in auPauses:
     try:
       return os.path.isfile(sPath);
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return None;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to check if file %s exists, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   return os.path.isdir(sPath);
 
-def fasReadChildNamesFromFolder(*asPathSections, **dxArguments):
+def feasReadChildNamesFromFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
   for uPause in auPauses:
@@ -84,64 +86,71 @@ def fasReadChildNamesFromFolder(*asPathSections, **dxArguments):
       if not os.path.isdir(sPath): break; # This is never going to work, exit this loop and try anyway to cause an exception
       return os.listdir(sPath);
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return None;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to read children from folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   return os.listdir(sPath);
 
-def fbCreateFolder(*asPathSections, **dxArguments):
+def febCreateFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
   for uPause in auPauses:
-    try:
-      if not os.path.isdir(sPath): os.makedirs(sPath);
-      return True;
-    except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
-      print "Error %s while attempting to create folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
-      time.sleep(uPause);
-  if not os.path.isdir(sPath): os.makedirs(sPath);
-  return True;
-
-def fbDeleteFolder(*asPathSections, **dxArguments):
-  fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
-  for uPause in auPauses:
-    fbDeleteChildrenFromFolder(sPath, fbRetryOnFailure = fbRetryOnFailure);
     try:
       if os.path.isdir(sPath):
-        os.rmdir(sPath);
-        return True;
-      return False;
+        return False;
+      os.makedirs(sPath);
+      return True;
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
-      print "Error %s while attempting to delete folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
+      print "Error %s while attempting to create folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   if os.path.isdir(sPath):
-    fbDeleteChildrenFromFolder(sPath, fbRetryOnFailure = fbRetryOnFailure);
-    os.rmdir(sPath);
-    return True;
-  return False;
-fbRemoveFolder = fbDeleteFolder;
+    return False;
+  os.makedirs(sPath);
+  return True;
 
-def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
+def febDeleteFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
-  bChildrenDeleted = False;
+  for uPause in auPauses:
+    ebChildrenDeleted = febDeleteChildrenFromFolder(*asPathSections, fbRetryOnFailure = fbRetryOnFailure);
+    if not isinstance(ebChildrenDeleted, bool):
+      return ebChildrenDeleted; # Return exception
+    try:
+      if not os.path.isdir(sPath):
+        return False;
+      os.rmdir(sPath);
+      return True;
+    except WindowsError as oException:
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
+      print "Error %s while attempting to delete folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
+      time.sleep(uPause);
+  if not os.path.isdir(sPath):
+    return False;
+  ebChildrenDeleted = febDeleteChildrenFromFolder(*asPathSections, fbRetryOnFailure = fbRetryOnFailure);
+  if not isinstance(ebChildrenDeleted, bool):
+    return ebChildrenDeleted; # Return exception
+  os.rmdir(sPath);
+  return True;
+
+def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
+  fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
+  sPath = fsFullPath(*asPathSections) + u"\\";
   # 1 Get files and sub-folders
   for uPause in auPauses:
     try:
       asChildNames = os.path.isdir(sPath) and os.listdir(sPath) or None;
       break;
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to read children of folder %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   else:
     asChildNames = os.path.isdir(sChildPath) and os.listdir(sPath) or None;
   if asChildNames is None:
-    return bChildrenDeleted; # Folder does not exist, nothing deleted.
+    return False; # Folder does not exist, nothing deleted.
   
+  bChildrenDeleted = False;
   # Delete files, sub-folders
   for sChildName in asChildNames:
     sChildPath = fsFullPath(sPath, sChildName);
@@ -150,7 +159,7 @@ def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         bIsFile = os.path.isfile(sChildPath);
         bIsFolder = os.path.isdir(sChildPath);
       except (OSError, WindowsError) as oException:
-        if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+        if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
         print "Error %s while attempting to read type of %s, will retry in %d seconds" % (repr(oException), sChildPath, uPause);
         time.sleep(uPause);
         continue;
@@ -158,7 +167,7 @@ def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         try:
           os.remove(sChildPath);
         except WindowsError as oException:
-          if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+          if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
           print "Error %s while attempting to delete file %s, will retry in %d seconds" % (repr(oException), sChildPath, uPause);
           time.sleep(uPause);
         else:
@@ -170,7 +179,7 @@ def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         try:
           os.rmdir(sChildPath);
         except (OSError, WindowsError) as oException:
-          if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+          if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
           print "Error %s while attempting to delete folder %s, will retry in %d seconds" % (repr(oException), sChildPath, uPause);
           time.sleep(uPause);
         else:
@@ -187,23 +196,26 @@ def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         os.rmdir(sChildPath);
         bChildrenDeleted = True;
   return bChildrenDeleted;
-fbRemoveChildrenFromFolder = fbDeleteChildrenFromFolder;
 
-def fbDeleteFile(*asPathSections, **dxArguments):
+def febDeleteFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
   for uPause in auPauses:
     try:
-      if os.path.isfile(sPath): os.remove(sPath);
+      if not os.path.isfile(sPath):
+        return False;
+      os.remove(sPath);
       return True;
     except WindowsError as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to delete file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
-  if os.path.isfile(sPath): os.remove(sPath);
+  if not os.path.isfile(sPath):
+    return False;
+  os.remove(sPath);
   return True;
 
-def fsReadDataFromFile(*asPathSections, **dxArguments):
+def fesReadDataFromFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
   for uPause in auPauses:
@@ -214,7 +226,7 @@ def fsReadDataFromFile(*asPathSections, **dxArguments):
       finally:
         oFile.close();
     except (WindowsError, IOError) as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return None;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to read from file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   oFile = open(sPath, "rb");
@@ -223,7 +235,7 @@ def fsReadDataFromFile(*asPathSections, **dxArguments):
   finally:
     oFile.close();
 
-def fbWriteDataToFile(sData, *asPathSections, **dxArguments):
+def feWriteDataToFile(sData, *asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
   for uPause in auPauses:
@@ -233,9 +245,9 @@ def fbWriteDataToFile(sData, *asPathSections, **dxArguments):
         oFile.write(sData);
       finally:
         oFile.close();
-      return True;
+      return None;
     except (WindowsError, IOError) as oException:
-      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return False;
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to write to file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
   oFile = open(sPath, "wb");
@@ -243,4 +255,4 @@ def fbWriteDataToFile(sData, *asPathSections, **dxArguments):
     oFile.write(sData);
   finally:
     oFile.close();
-  return True;
+  return None;
