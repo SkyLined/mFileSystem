@@ -1,6 +1,7 @@
 import os, shutil, time;
 # To solve any unicode errors you may get, add this line (without the "#") to your main python script:
 # import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
+# http://msdn.microsoft.com/en-us/library/aa365247.aspx
 
 # Try again almost immediately, then wait longer and longer
 auPauses = [
@@ -33,10 +34,13 @@ def fsTranslateToValidName(sName):
   return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
 
 def fsFullPath(*asPathSections):
-  # http://msdn.microsoft.com/en-us/gozerlib.ary/aa365247.aspx
   sPath = unicode(os.path.join(*asPathSections));
-  if sPath[:2] == u"\\\\": return sPath;
-  assert sPath[1] == u":", "Only full paths are acceptable, not %s" % sPath;
+  if sPath[:4] == u"\\\\?\\":
+    return sPath;
+  if sPath[:2] == u"\\\\":
+    return u"\\\\?\\UNC\\" + sPath[2:];
+  assert len(sPath) > 1 and sPath[1] == u":", \
+      "Only full paths are acceptable, not %s" % sPath;
   return u"\\\\?\\" + sPath;
 
 def fsFullParentPath(*asPathSections):
