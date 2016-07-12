@@ -54,6 +54,8 @@ def ftFile_sName_and_sExtension(*asPathSections):
 def fsRelativePathFromTo(sFromPath, sToPath):
   return os.path.relpath(fsFullPath(sToPath), fsFullPath(sFromPath));
 
+def fbIsFolder(*asPathSections):
+  return febIsFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febIsFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
@@ -66,6 +68,8 @@ def febIsFolder(*asPathSections, **dxArguments):
       time.sleep(uPause);
   return os.path.isdir(sPath);
 
+def fbIsFile(*asPathSections):
+  return febIsFile(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febIsFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
@@ -78,6 +82,8 @@ def febIsFile(*asPathSections, **dxArguments):
       time.sleep(uPause);
   return os.path.isdir(sPath);
 
+def fasReadChildNamesFromFolder(*asPathSections):
+  return feasReadChildNamesFromFolder(*asPathSections); # Will always return a list of strings since fbRetryOnFailure is not set.
 def feasReadChildNamesFromFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
@@ -91,6 +97,8 @@ def feasReadChildNamesFromFolder(*asPathSections, **dxArguments):
       time.sleep(uPause);
   return os.listdir(sPath);
 
+def fbCreateFolder(*asPathSections):
+  return febCreateFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febCreateFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
@@ -109,6 +117,8 @@ def febCreateFolder(*asPathSections, **dxArguments):
   os.makedirs(sPath);
   return True;
 
+def fbDeleteFolder(*asPathSections):
+  return febDeleteFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febDeleteFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
@@ -133,6 +143,8 @@ def febDeleteFolder(*asPathSections, **dxArguments):
   os.rmdir(sPath);
   return True;
 
+def fbDeleteChildrenFromFolder(*asPathSections):
+  return febDeleteChildrenFromFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections) + u"\\";
@@ -197,6 +209,8 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         bChildrenDeleted = True;
   return bChildrenDeleted;
 
+def fbDeleteFile(*asPathSections):
+  return febDeleteFile(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febDeleteFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
@@ -215,6 +229,8 @@ def febDeleteFile(*asPathSections, **dxArguments):
   os.remove(sPath);
   return True;
 
+def fsReadDataFromFile(*asPathSections):
+  return fesReadDataFromFile(*asPathSections); # Will always return a string since fbRetryOnFailure is not set.
 def fesReadDataFromFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
@@ -235,6 +251,8 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
   finally:
     oFile.close();
 
+def fWriteDataToFile(*asPathSections):
+  return feWriteDataToFile(*asPathSections); # Will never return a value since fbRetryOnFailure is not set.
 def feWriteDataToFile(sData, *asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsFullPath(*asPathSections);
