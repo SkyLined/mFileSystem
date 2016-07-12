@@ -247,6 +247,9 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
         oFile.close();
       return None;
     except (WindowsError, IOError) as oException:
+      if isinstance(oException, IOError) and oException.args[0] == 22:
+        # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+        oException.args = (22, "Invalid file name %s" % sPath);
       if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to write to file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
