@@ -193,7 +193,7 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
           bChildrenDeleted = True;
           break;
       elif bIsFolder:
-        if fbDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
+        if febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
           bChildrenDeleted = True;
         try:
           os.rmdir(sChildPath);
@@ -210,7 +210,7 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         os.remove(sChildPath);
         bChildrenDeleted = True;
       elif os.path.isdir(sChildPath):
-        if fbDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
+        if febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
           bChildrenDeleted = True;
         os.rmdir(sChildPath);
         bChildrenDeleted = True;
