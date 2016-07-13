@@ -26,6 +26,9 @@ dsInvalidPathCharacterTranslationMap = {
   u":":   u"\u0589", # ARMENIAN FULL STOP
   u"|":   u"\u01C0", # LATIN LETTER DENTAL CLICK
 };
+for uCharCode in xrange(0, 0x20):
+  # Translate control codes into replacement characters
+  dsInvalidPathCharacterTranslationMap[unichr(uCharCode)] = u"\uFFFD"; # REPLACEMENT CHARACTER
 
 def fsLocalPath(*asPathSections):
   return fsFullPath(os.getcwdu(), *asPathSections);

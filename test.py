@@ -3,7 +3,7 @@ import codecs, os, sys;
 sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
 
 sTempFolderPath = FileSystem.fsFullPath(os.environ["TEMP"]);
-sSpecialChars = 'test[[["<>\\/?*:|]]]';
+sSpecialChars = 'test[[[\0\r\n"<>\\/?*:|]]]';
 
 sSpecialCharsPath = FileSystem.fsFullPath(sTempFolderPath, sSpecialChars);
 
