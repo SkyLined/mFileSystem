@@ -193,7 +193,7 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
           bChildrenDeleted = True;
           break;
       elif bIsFolder:
-        ebChildrenDeleted = febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
+        ebChildrenDeleted = febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure);
         if isinstance(ebChildrenDeleted, bool):
           bChildrenDeleted = ebChildrenDeleted;
         else:
