@@ -193,8 +193,11 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
           bChildrenDeleted = True;
           break;
       elif bIsFolder:
-        if febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
-          bChildrenDeleted = True;
+        ebChildrenDeleted = febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
+        if isinstance(ebChildrenDeleted, bool):
+          bChildrenDeleted = ebChildrenDeleted;
+        else:
+          return ebChildrenDeleted;
         try:
           os.rmdir(sChildPath);
         except (OSError, WindowsError) as oException:
@@ -210,7 +213,7 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         os.remove(sChildPath);
         bChildrenDeleted = True;
       elif os.path.isdir(sChildPath):
-        if febDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
+        if fbDeleteChildrenFromFolder(sChildPath, fbRetryOnFailure = fbRetryOnFailure):
           bChildrenDeleted = True;
         os.rmdir(sChildPath);
         bChildrenDeleted = True;
@@ -281,6 +284,11 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
   oFile = open(sPath, "wb");
   try:
     oFile.write(sData);
+  except IOError as oException:
+    if isinstance(oException, IOError) and oException.args[0] == 22:
+      # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+      oException.args = (22, "Invalid file name %s" % sPath);
+    raise;
   finally:
     oFile.close();
   return None;
