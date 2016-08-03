@@ -36,6 +36,7 @@ def fsLocalPath(*asPathSections):
 def fsTranslateToValidName(sName, bUnicode = True):
   if bUnicode:
     return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
+  return u"".join([(ord(sChar) > 0xFF or sChar in dsInvalidPathCharacterTranslationMap) and u"_" or sChar for sChar in unicode(sName)]);
 
 def fsFullPath(*asPathSections):
   sPath = unicode(os.path.join(*asPathSections));
