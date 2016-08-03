@@ -33,8 +33,9 @@ for uCharCode in xrange(0, 0x20):
 def fsLocalPath(*asPathSections):
   return fsFullPath(os.getcwdu(), *asPathSections);
 
-def fsTranslateToValidName(sName):
-  return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
+def fsTranslateToValidName(sName, bUnicode = True):
+  if bUnicode:
+    return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
 
 def fsFullPath(*asPathSections):
   sPath = unicode(os.path.join(*asPathSections));
