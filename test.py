@@ -2,14 +2,14 @@ import FileSystem;
 import codecs, os, sys;
 sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
 
-sTempFolderPath = FileSystem.fsFullPath(os.environ["TEMP"]);
+sTempFolderPath = FileSystem.fsPath(os.environ["TEMP"]);
 sSpecialChars = 'test[[[\0\r\n"<>\\/?*:|]]]';
 
-sSpecialCharsPath = FileSystem.fsFullPath(sTempFolderPath, sSpecialChars);
+sSpecialCharsPath = FileSystem.fsPath(sTempFolderPath, sSpecialChars);
 
 for bUnicode in [True, False]:
   print "* Testing file operations with special characters in %s mode..." % (bUnicode and "Unicode" or "ASCII"); 
-  sTranslatedSpecialChars = FileSystem.fsTranslateToValidName(sSpecialChars, bUnicode = bUnicode);
+  sTranslatedSpecialChars = FileSystem.fsValidName(sSpecialChars, bUnicode = bUnicode);
   print u"  File/folder name: %s" % sTranslatedSpecialChars;
   sData = "x";
 

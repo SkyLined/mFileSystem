@@ -1,7 +1,6 @@
 import os, shutil, time;
 # To solve any unicode errors you may get, add this line (without the "#") to your main python script:
 # import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
-# http://msdn.microsoft.com/en-us/library/aa365247.aspx
 
 # Try again almost immediately, then wait longer and longer
 auPauses = [
@@ -14,7 +13,19 @@ auPauses = [
 #  1800,                 # one hour
 ];                      # give up.
 
-dsInvalidPathCharacterTranslationMap = {
+dsInvalidPathCharacterAsciiTranslationMap = {
+  # Translates characters that are not valid in file/folder names to a visually similar unicode character.
+  u'"':   u"''",     # Double APOSTROPHY
+  u"<":   u"[",      # LEFT SQUARE BRACKET
+  u">":   u"]",      # RIGHT SQUARE BRACKET
+  u"\\":  u" ",      # SPACE
+  u"/":   u" ",      # SPACE
+  u"?":   u"!",      # EXCLAMATION MARK
+  u"*":   u"x",      # LATIN SMALL LETTER X
+  u":":   u".",      # FULL STOP
+  u"|":   u"!",      # EXCLAMATION MARK
+};
+dsInvalidPathCharacterUnicodeTranslationMap = {
   # Translates characters that are not valid in file/folder names to a visually similar unicode character.
   u'"':   u"\u2033", # DOUBLE PRIME
   u"<":   u"\u3008", # LEFT ANGLE BRACKET
@@ -27,31 +38,45 @@ dsInvalidPathCharacterTranslationMap = {
   u"|":   u"\u01C0", # LATIN LETTER DENTAL CLICK
 };
 for uCharCode in xrange(0, 0x20):
-  # Translate control codes into replacement characters
-  dsInvalidPathCharacterTranslationMap[unichr(uCharCode)] = u"\uFFFD"; # REPLACEMENT CHARACTER
+  # Translate control codes
+  dsInvalidPathCharacterAsciiTranslationMap[unichr(uCharCode)] = u"."; # FULL STOP
+  dsInvalidPathCharacterUnicodeTranslationMap[unichr(uCharCode)] = u"\uFFFD"; # REPLACEMENT CHARACTER
 
-def fsLocalPath(*asPathSections):
-  return fsFullPath(os.getcwdu(), *asPathSections);
+def fsValidName(sName, bUnicode = True):
+  dsInvalidPathCharacterTranslationMap = bUnicode \
+      and dsInvalidPathCharacterUnicodeTranslationMap \
+      or dsInvalidPathCharacterAsciiTranslationMap;
+  return u"".join([
+    (bUnicode or ord(sChar) < 0x100) and dsInvalidPathCharacterTranslationMap.get(sChar, sChar) or "."
+    for sChar in unicode(sName)
+  ]);
 
-def fsTranslateToValidName(sName, bUnicode = True):
-  if bUnicode:
-    return u"".join([dsInvalidPathCharacterTranslationMap.get(sChar, sChar) for sChar in unicode(sName)]);
-  return u"".join([(ord(sChar) > 0xFF or sChar in dsInvalidPathCharacterTranslationMap) and u"_" or sChar for sChar in unicode(sName)]);
+# http://msdn.microsoft.com/en-us/library/aa365247.aspx
+def fsPath(*asPathSections):
+  if len(asPathSections) == 0:
+    return u"\\\\?\\" + os.getcwdu();
+  sPath = os.path.join(*[unicode(s) for s in asPathSections]);
+  if sPath[:2] != u"\\\\": # Absolute or relative path to local drive
+    sDrive, sPath = os.path.splitdrive(sPath);
+    if sDrive is None:
+      # No drive provided: use global CWD
+      sDrive, sCWDPath = os.path.splitdrive(os.getcwdu());
+    else:
+      # Drive provided: use CWD for the specified drive
+      sCWDPath = os.path.abspath(sDrive)[2:];
+    if sPath[0] != u"\\":
+      # Path is relative to CWD path
+      sPath = os.path.join(sCWDPath, sPath);
+    return u"\\\\?\\" + sDrive + os.path.normpath(sPath);
+  if sPath[2] != "?":
+    # UNC path "\\..." => "\\?\UNC\..."
+    return u"\\\\?\\UNC\\" + os.path.normpath(sPath[2:]);
+  return u"\\\\?\\" + os.path.normpath(sPath[4:]);
 
-def fsFullPath(*asPathSections):
-  sPath = unicode(os.path.join(*asPathSections));
-  if sPath[:4] == u"\\\\?\\":
-    return sPath;
-  if sPath[:2] == u"\\\\":
-    return u"\\\\?\\UNC\\" + sPath[2:];
-  assert len(sPath) > 1 and sPath[1] == u":", \
-      "Only full paths are acceptable, not %s" % sPath;
-  return u"\\\\?\\" + sPath;
-
-def fsFullParentPath(*asPathSections):
-  return os.path.dirname(fsFullPath(*asPathSections));
+def fsParentPath(*asPathSections):
+  return os.path.dirname(fsPath(*asPathSections));
 def fsName(*asPathSections):
-  return os.path.basename(fsFullPath(*asPathSections));
+  return os.path.basename(fsPath(*asPathSections));
 def ftFile_sName_and_sExtension(*asPathSections):
     asComponents = fsName(*asPathSections).rsplit(u".", 1);
     return (
@@ -61,13 +86,17 @@ def ftFile_sName_and_sExtension(*asPathSections):
     );
 
 def fsRelativePathFromTo(sFromPath, sToPath):
-  return os.path.relpath(fsFullPath(sToPath), fsFullPath(sFromPath));
+  return os.path.relpath(fsPath(sToPath), fsPath(sFromPath));
 
-def fbIsFolder(*asPathSections):
-  return febIsFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
+def fbIsFolder(*asPathSections, **dxArguments):
+  ebResult = febIsFolder(*asPathSections, **dxArguments);
+  if isinstance(ebResult, bool):
+    return ebResult;
+  raise ebResult;
+
 def febIsFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
+  sPath = fsPath(*asPathSections) + u"\\";
   for uPause in auPauses:
     try:
       return os.path.isdir(sPath);
@@ -81,7 +110,7 @@ def fbIsFile(*asPathSections):
   return febIsFile(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febIsFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections);
+  sPath = fsPath(*asPathSections);
   for uPause in auPauses:
     try:
       return os.path.isfile(sPath);
@@ -91,11 +120,15 @@ def febIsFile(*asPathSections, **dxArguments):
       time.sleep(uPause);
   return os.path.isdir(sPath);
 
-def fasReadChildNamesFromFolder(*asPathSections):
-  return feasReadChildNamesFromFolder(*asPathSections); # Will always return a list of strings since fbRetryOnFailure is not set.
+def fasReadChildNamesFromFolder(*asPathSections, **dxArguments):
+  easResult = feasReadChildNamesFromFolder(*asPathSections, **dxArguments);
+  if isinstance(easResult, list):
+    return easResult;
+  raise easResult;
+
 def feasReadChildNamesFromFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
+  sPath = fsPath(*asPathSections) + u"\\";
   for uPause in auPauses:
     try:
       if not os.path.isdir(sPath): break; # This is never going to work, exit this loop and try anyway to cause an exception
@@ -106,11 +139,15 @@ def feasReadChildNamesFromFolder(*asPathSections, **dxArguments):
       time.sleep(uPause);
   return os.listdir(sPath);
 
-def fbCreateFolder(*asPathSections):
-  return febCreateFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
+def fbCreateFolder(*asPathSections, **dxArguments):
+  ebResult = febCreateFolder(*asPathSections, **dxArguments);
+  if isinstance(ebResult, bool):
+    return ebResult;
+  raise ebResult;
+
 def febCreateFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
+  sPath = fsPath(*asPathSections) + u"\\";
   for uPause in auPauses:
     try:
       if os.path.isdir(sPath):
@@ -130,7 +167,7 @@ def fbDeleteFolder(*asPathSections):
   return febDeleteFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
 def febDeleteFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
+  sPath = fsPath(*asPathSections) + u"\\";
   for uPause in auPauses:
     ebChildrenDeleted = febDeleteChildrenFromFolder(*asPathSections, fbRetryOnFailure = fbRetryOnFailure);
     if not isinstance(ebChildrenDeleted, bool):
@@ -152,11 +189,15 @@ def febDeleteFolder(*asPathSections, **dxArguments):
   os.rmdir(sPath);
   return True;
 
-def fbDeleteChildrenFromFolder(*asPathSections):
-  return febDeleteChildrenFromFolder(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
+def fbDeleteChildrenFromFolder(*asPathSections, **dxArguments):
+  ebResult = febDeleteChildrenFromFolder(*asPathSections, **dxArguments);
+  if isinstance(ebResult, bool):
+    return ebResult;
+  raise ebResult;
+
 def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections) + u"\\";
+  sPath = fsPath(*asPathSections) + u"\\";
   # 1 Get files and sub-folders
   for uPause in auPauses:
     try:
@@ -174,7 +215,7 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
   bChildrenDeleted = False;
   # Delete files, sub-folders
   for sChildName in asChildNames:
-    sChildPath = fsFullPath(sPath, sChildName);
+    sChildPath = fsPath(sPath, sChildName);
     for uPause in auPauses:
       try:
         bIsFile = os.path.isfile(sChildPath);
@@ -221,11 +262,15 @@ def febDeleteChildrenFromFolder(*asPathSections, **dxArguments):
         bChildrenDeleted = True;
   return bChildrenDeleted;
 
-def fbDeleteFile(*asPathSections):
-  return febDeleteFile(*asPathSections); # Will always return a boolean since fbRetryOnFailure is not set.
+def fbDeleteFile(*asPathSections, **dxArguments):
+  ebResult = febDeleteFile(*asPathSections, **dxArguments);
+  if isinstance(ebResult, bool):
+    return ebResult;
+  raise ebResult;
+
 def febDeleteFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections);
+  sPath = fsPath(*asPathSections);
   for uPause in auPauses:
     try:
       if not os.path.isfile(sPath):
@@ -245,7 +290,7 @@ def fsReadDataFromFile(*asPathSections):
   return fesReadDataFromFile(*asPathSections); # Will always return a string since fbRetryOnFailure is not set.
 def fesReadDataFromFile(*asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections);
+  sPath = fsPath(*asPathSections);
   for uPause in auPauses:
     try:
       oFile = open(sPath, "rb");
@@ -263,11 +308,15 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
   finally:
     oFile.close();
 
-def fWriteDataToFile(*asPathSections):
-  return feWriteDataToFile(*asPathSections); # Will never return a value since fbRetryOnFailure is not set.
+def fWriteDataToFile(*asPathSections, **dxArguments):
+  eResult = feWriteDataToFile(*asPathSections, **dxArguments);
+  if eResult is None:
+    return 
+  raise eResult;
+
 def feWriteDataToFile(sData, *asPathSections, **dxArguments):
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
-  sPath = fsFullPath(*asPathSections);
+  sPath = fsPath(*asPathSections);
   for uPause in auPauses:
     try:
       oFile = open(sPath, "wb");
