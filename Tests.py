@@ -7,6 +7,24 @@ sSpecialChars = 'test[[[\0\r\n"<>\\/?*:|]]]';
 
 sSpecialCharsPath = FileSystem.fsPath(sTempFolderPath, sSpecialChars);
 
+sCWD = os.getcwdu().rstrip("\\");
+sCWDDrive, sCWDPath = os.path.splitdrive(sCWD);
+print "Testing fsPath...";
+dsPathTests = {
+  r".":                   r"\\?\%s" % sCWD,
+  r"x":                   r"\\?\%s\x" % sCWD,
+  r"x\y":                 r"\\?\%s\x\y" % sCWD,
+  r"%sx\y" % sCWDDrive:   r"\\?\%s\x\y" % sCWD,
+  r"%s\x\y" % sCWDDrive:  r"\\?\%s\x\y" % sCWDDrive,
+  r"x:\y\z":              r"\\?\x:\y\z",
+  r"\\?\x:\y\z":          r"\\?\x:\y\z",
+  r"\\x\y\z":             r"\\?\UNC\x\y\z",
+  r"\\?\UNC\x\y\z":       r"\\?\UNC\x\y\z",
+};
+for (sInput, sExpectedOutput) in dsPathTests.items():
+  sOutput =  FileSystem.fsPath(sInput);
+  assert sOutput == sExpectedOutput, "fsPath error: got %s, expected %s" % (sOutput, sExpectedOutput);
+
 for bUnicode in [True, False]:
   print "* Testing file operations with special characters in %s mode..." % (bUnicode and "Unicode" or "ASCII"); 
   sTranslatedSpecialChars = FileSystem.fsValidName(sSpecialChars, bUnicode = bUnicode);
