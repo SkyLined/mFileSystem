@@ -67,11 +67,11 @@ def fsPath(*asPathSections):
     if sPath[0] != u"\\":
       # Path is relative to CWD path
       sPath = os.path.join(sCWDPath, sPath);
-    return u"\\\\?\\" + sDrive + os.path.normpath(sPath);
+    return u"\\\\?\\" + sDrive + os.path.normpath(sPath).rstrip("\\");
   if sPath[2] != "?":
     # UNC path "\\..." => "\\?\UNC\..."
-    return u"\\\\?\\UNC\\" + os.path.normpath(sPath[2:]);
-  return u"\\\\?\\" + os.path.normpath(sPath[4:]);
+    return u"\\\\?\\UNC\\" + os.path.normpath(sPath[2:]).rstrip("\\");
+  return u"\\\\?\\" + os.path.normpath(sPath[4:]).rstrip("\\");
 
 def fsParentPath(*asPathSections):
   return os.path.dirname(fsPath(*asPathSections));
