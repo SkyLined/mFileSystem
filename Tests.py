@@ -9,7 +9,7 @@ sSpecialCharsPath = FileSystem.fsPath(sTempFolderPath, sSpecialChars);
 
 sCWD = os.getcwdu().rstrip("\\");
 sCWDDrive, sCWDPath = os.path.splitdrive(sCWD);
-print "Testing fsPath...";
+print "* Testing fsPath...";
 dsPathTests = {
   r".":                   r"\\?\%s" % sCWD,
   r"x":                   r"\\?\%s\x" % sCWD,
@@ -22,8 +22,13 @@ dsPathTests = {
   r"\\?\UNC\x\y\z":       r"\\?\UNC\x\y\z",
 };
 for (sInput, sExpectedOutput) in dsPathTests.items():
-  sOutput =  FileSystem.fsPath(sInput);
-  assert sOutput == sExpectedOutput, "fsPath error: got %s, expected %s" % (sOutput, sExpectedOutput);
+  sOutput = FileSystem.fsPath(sInput);
+  assert sOutput == sExpectedOutput, \
+      "fsPath error for %s: got %s, expected %s" % (sInput, sOutput, sExpectedOutput);
+  sInput += "\\";
+  sOutput = FileSystem.fsPath(sInput);
+  assert sOutput == sExpectedOutput, \
+      "fsPath error for %s: got %s, expected %s" % (sInput, sOutput, sExpectedOutput);
 
 for bUnicode in [True, False]:
   print "* Testing file operations with special characters in %s mode..." % (bUnicode and "Unicode" or "ASCII"); 
