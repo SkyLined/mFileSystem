@@ -58,7 +58,7 @@ def fsPath(*asPathSections):
   sPath = os.path.join(*[unicode(s) for s in asPathSections]);
   if sPath[:2] != u"\\\\": # Absolute or relative path to local drive
     sDrive, sPath = os.path.splitdrive(sPath);
-    if sDrive is None:
+    if not sDrive:
       # No drive provided: use global CWD
       sDrive, sCWDPath = os.path.splitdrive(os.getcwdu());
     else:
