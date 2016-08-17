@@ -296,7 +296,7 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
       oFile = open(sPath, "rb");
     except (WindowsError, IOError) as oException:
       if isinstance(oException, IOError):
-        oException.args[1] += " while attempting to open file %s for reading" % sPath;
+        oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for reading" % sPath);
       if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to open file %s for reading, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
@@ -308,7 +308,7 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
           oFile.close();
       except (WindowsError, IOError) as oException:
         if isinstance(oException, IOError):
-          oException.args[1] += " while attempting to read from file %s" % sPath;
+          oException.args = (oException.args[0], oException.args[1] + " while attempting to read from file %s" % sPath);
         if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
         print "Error %s while attempting to read from file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
         time.sleep(uPause);
@@ -332,7 +332,7 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
       oFile = open(sPath, "wb");
     except (WindowsError, IOError) as oException:
       if isinstance(oException, IOError):
-        oException.args[1] += " while attempting to open file %s for writing" % sPath;
+        oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for writing" % sPath);
       if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to open file %s for writing, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
@@ -345,7 +345,7 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
         return None;
       except (WindowsError, IOError) as oException:
         if isinstance(oException, IOError):
-          oException.args[1] += " while attempting to write to file %s" % sPath;
+          oException.args = (oException.args[0], oException.args[1] + " while attempting to write to file %s" % sPath);
         if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
         print "Error %s while attempting to write to file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
         time.sleep(uPause);
