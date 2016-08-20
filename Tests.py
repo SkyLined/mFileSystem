@@ -82,4 +82,19 @@ for bUnicode in [True, False]:
   ebDeleteFolderResult = FileSystem.febDeleteFolder(sTempFolderPath, sTranslatedSpecialChars);
   assert ebDeleteFolderResult is True, "Expected febDeleteFolder result to be True, got %s" % repr(ebDeleteFolderResult);
 
+
+print "* Checking invalid file name errors...";
+eError = FileSystem.fesReadDataFromFile("c:\|", fbRetryOnFailure = lambda: False);
+assert isinstance(eError, IOError) and eError.args == (22, r"Invalid file name \\?\c:\|"), \
+    "Unexpected result for attempt to read from file \"c:\\|\": %s" % repr(eError);
+eError = FileSystem.feWriteDataToFile("", "c:\|", fbRetryOnFailure = lambda: False);
+assert isinstance(eError, IOError) and eError.args == (22, r"Invalid file name \\?\c:\|"), \
+    "Unexpected result for attempt to write to file \"c:\\|\": %s" % repr(eError);
+
+print "* Checking write invalid (unicode) data...";
+try:
+  FileSystem.feWriteDataToFile(u"\u1234", sTempFolderPath, "test.txt", fbRetryOnFailure = lambda: False);
+except UnicodeEncodeError:
+  pass;
+
 print "+ All tests passed."

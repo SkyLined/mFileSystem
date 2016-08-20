@@ -296,25 +296,47 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
       oFile = open(sPath, "rb");
     except (WindowsError, IOError) as oException:
       if isinstance(oException, IOError):
-        oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for reading" % sPath);
+        if oException.args[0] == 22:
+          # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+          oException.args = (22, "Invalid file name %s" % sPath);
+        else:
+          oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for reading" % sPath);
       if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to open file %s for reading, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
     else:
       try:
-        try:
-          return oFile.read();
-        finally:
-          oFile.close();
+        return oFile.read();
       except (WindowsError, IOError) as oException:
         if isinstance(oException, IOError):
-          oException.args = (oException.args[0], oException.args[1] + " while attempting to read from file %s" % sPath);
+          if oException.args[0] == 22:
+            # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+            oException.args = (22, "Invalid file name %s" % sPath);
+          else:
+            oException.args = (oException.args[0], oException.args[1] + " while attempting to read from file %s" % sPath);
         if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
         print "Error %s while attempting to read from file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
         time.sleep(uPause);
-  oFile = open(sPath, "rb");
+      finally:
+        oFile.close();
+  try:
+    oFile = open(sPath, "rb");
+  except IOError as oException:
+    if oException.args[0] == 22:
+      # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+      oException.args = (22, "Invalid file name %s" % sPath);
+    else:
+      oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for reading" % sPath);
+    raise;
   try:
     return oFile.read();
+  except IOError as oException:
+    if oException.args[0] == 22:
+      # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+      oException.args = (22, "Invalid file name %s" % sPath);
+    else:
+      oException.args = (oException.args[0], oException.args[1] + " while attempting to read from file %s" % sPath);
+    raise;
   finally:
     oFile.close();
 
@@ -325,6 +347,7 @@ def fWriteDataToFile(*asPathSections, **dxArguments):
   raise eResult;
 
 def feWriteDataToFile(sData, *asPathSections, **dxArguments):
+  sData = str(sData);
   fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
   sPath = fsPath(*asPathSections);
   for uPause in auPauses:
@@ -332,30 +355,49 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
       oFile = open(sPath, "wb");
     except (WindowsError, IOError) as oException:
       if isinstance(oException, IOError):
-        oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for writing" % sPath);
+        if oException.args[0] == 22:
+          # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+          oException.args = (22, "Invalid file name %s" % sPath);
+        else:
+          oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for writing" % sPath);
       if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
       print "Error %s while attempting to open file %s for writing, will retry in %d seconds" % (repr(oException), sPath, uPause);
       time.sleep(uPause);
     else:
       try:
-        try:
-          oFile.write(sData);
-        finally:
-          oFile.close();
-        return None;
+        oFile.write(sData);
       except (WindowsError, IOError) as oException:
         if isinstance(oException, IOError):
-          oException.args = (oException.args[0], oException.args[1] + " while attempting to write to file %s" % sPath);
+          if oException.args[0] == 22:
+            # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+            oException.args = (22, "Invalid file name %s" % sPath);
+          else:
+            oException.args = (oException.args[0], oException.args[1] + " while attempting to write to file %s" % sPath);
         if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
         print "Error %s while attempting to write to file %s, will retry in %d seconds" % (repr(oException), sPath, uPause);
         time.sleep(uPause);
-  oFile = open(sPath, "wb");
+      else:
+        return None;
+      finally:
+        oFile.close();
+  try:
+    oFile = open(sPath, "wb");
+  except IOError as oException:
+    if oException.args[0] == 22:
+      # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+      oException.args = (22, "Invalid file name %s" % sPath);
+    else:
+      oException.args = (oException.args[0], oException.args[1] + " while attempting to open file %s for writing" % sPath);
+    raise;
   try:
     oFile.write(sData);
   except IOError as oException:
-    if isinstance(oException, IOError) and oException.args[0] == 22:
-      # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
-      oException.args = (22, "Invalid file name %s" % sPath);
+    if isinstance(oException, IOError):
+      if oException.args[0] == 22:
+        # (22, "invalid mode ('wb') or filename") => The mode is correct, so the name must be wrong: update the error
+        oException.args = (22, "Invalid file name %s" % sPath);
+      else:
+        oException.args = (oException.args[0], oException.args[1] + " while attempting to write to file %s" % sPath);
     raise;
   finally:
     oFile.close();
