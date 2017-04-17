@@ -402,3 +402,42 @@ def feWriteDataToFile(sData, *asPathSections, **dxArguments):
   finally:
     oFile.close();
   return None;
+
+def fMoveFile(asCurrentFilePath, asNewFilePath, **dxArguments):
+  eResult = feMoveFileOrFolder(asCurrentFilePath, asNewFilePath, "file", **dxArguments);
+  if eResult is None:
+    return 
+  raise eResult;
+def fMoveFolder(asCurrentFolderPath, asNewFolderPath, **dxArguments):
+  eResult = feMoveFileOrFolder(asCurrentFolderPath, asNewFolderPath, "Folder", **dxArguments);
+  if eResult is None:
+    return 
+  raise eResult;
+
+def feMoveFile(asCurrentFilePath, asNewFilePath, **dxArguments):
+  return feMoveFileOrFolder(asCurrentFilePath, asNewFilePath, "file", **dxArguments);
+def feMoveFolder(asCurrentFolderPath, asNewFolderPath, **dxArguments):
+  return feMoveFileOrFolder(asCurrentFolderPath, asNewFolderPath, "Folder", **dxArguments);
+
+def feMoveFileOrFolder(asCurrentFileOrFolderPath, asNewFileOrFolderPath, sFileOrFolder, **dxArguments):
+  sCurrentFileOrFolderPath = fsPath(*(isinstance(asCurrentFileOrFolderPath, list) and asCurrentFileOrFolderPath or [asCurrentFileOrFolderPath]));
+  sNewFileOrFolderPath = fsPath(*(isinstance(asNewFileOrFolderPath, list) and asNewFileOrFolderPath or [asNewFileOrFolderPath]));
+  fbRetryOnFailure = dxArguments.get("fbRetryOnFailure");
+  for uPause in auPauses:
+    try:
+      os.rename(sCurrentFileOrFolderPath, sNewFileOrFolderPath);
+    except (WindowsError, IOError) as oException:
+      if isinstance(oException, WindowsError) and oException.args[0] in [2, 183]:
+        return oException; # sCurrentFileOrFolderPath does not exist (2) or sNewFileOrFolderPath already exists (183).
+      if isinstance(oException, WindowsError) and oException.args[0] in [3]:
+        # [Error 3] The system cannot find the path specified
+        oException.args = (3, "%s not found: %s" % (sFileOrFolder[0].upper() + sFileOrFolder[1:], sCurrentFileOrFolderPath));
+      if fbRetryOnFailure is not None and not fbRetryOnFailure(): return oException;
+      print "Error %s while attempting to rename %s %s to %s, will retry in %d seconds" % \
+          (repr(oException), sFileOrFolder, sCurrentFileOrFolderPath, sNewFileOrFolderPath, uPause);
+      time.sleep(uPause);
+    else:
+      return None;
+  os.rename(sCurrentFileOrFolderPath, sNewFileOrFolderPath);
+  return None;
+  
