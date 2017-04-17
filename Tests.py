@@ -54,7 +54,7 @@ for bUnicode in [True, False]:
     assert ebDeleteFolderResult is True, "Expected febDeleteFolder result to be True, got %s" % repr(ebDeleteFolderResult);
 
   print "  * Creating file with special characters..."; 
-  # Create a file, detect it, read it and delete it.
+  # Create a file, detect it, read it, move it and delete it.
   eWriteFileResult = FileSystem.feWriteDataToFile(sData, sTempFolderPath, sTranslatedSpecialChars);
   assert eWriteFileResult is None, "Expected feWriteDataToFile result to be None, got %s" % repr(eWriteFileResult);
   print "    * Checking if file with special characters exists..."; 
@@ -63,7 +63,12 @@ for bUnicode in [True, False]:
   print "    * Reading file with special characters..."; 
   esReadFileResult = FileSystem.fesReadDataFromFile(sTempFolderPath, sTranslatedSpecialChars);
   assert esReadFileResult == sData, "Expected febReadDataFromFile result to be %s, got %s" % (repr(sData), repr(esReadFileResult));
-  print "    * Deletiong file with special characters..."; 
+  print "    * Renaming file with special characters..."; 
+  eMoveFileResult = FileSystem.feMoveFile([sTempFolderPath, sTranslatedSpecialChars], [sTempFolderPath, "moved"]);
+  assert eMoveFileResult is None, "Expected feMoveFile result to be None, got %s" % repr(eMoveFileResult);
+  eMoveFileResult = FileSystem.feMoveFile([sTempFolderPath, "Moved"], [sTempFolderPath, sTranslatedSpecialChars]);
+  assert eMoveFileResult is None, "Expected feMoveFile result to be None, got %s" % repr(eMoveFileResult);
+  print "    * Deleting file with special characters..."; 
   ebDeleteFileResult = FileSystem.febDeleteFile(sTempFolderPath, sTranslatedSpecialChars);
   assert ebDeleteFileResult is True, "Expected febDeleteFile result to be True, got %s" % repr(ebDeleteFileResult);
 
@@ -78,7 +83,12 @@ for bUnicode in [True, False]:
   print "    * Creating file with special characters in folder with special characters..."; 
   eWriteFileResult = FileSystem.feWriteDataToFile(sData, sTempFolderPath, sTranslatedSpecialChars, sTranslatedSpecialChars);
   assert eWriteFileResult is None, "Expected feWriteDataToFile result to be None, got %s" % repr(eWriteFileResult);
-  print "    * Deletiong folder with special characters containing a file with special characters..."; 
+  print "    * Renaming folder with special characters..."; 
+  eMoveFolderResult = FileSystem.feMoveFolder([sTempFolderPath, sTranslatedSpecialChars], [sTempFolderPath, "moved"]);
+  assert eMoveFolderResult is None, "Expected feMoveFolder result to be None, got %s" % repr(eMoveFolderResult);
+  eMoveFolderResult = FileSystem.feMoveFolder([sTempFolderPath, "moved"], [sTempFolderPath, sTranslatedSpecialChars]);
+  assert eMoveFolderResult is None, "Expected feMoveFolder result to be None, got %s" % repr(eMoveFolderResult);
+  print "    * Deleting folder with special characters containing a file with special characters..."; 
   ebDeleteFolderResult = FileSystem.febDeleteFolder(sTempFolderPath, sTranslatedSpecialChars);
   assert ebDeleteFolderResult is True, "Expected febDeleteFolder result to be True, got %s" % repr(ebDeleteFolderResult);
 
