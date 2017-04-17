@@ -32,7 +32,7 @@ dsInvalidPathCharacterUnicodeTranslationMap = {
   u">":   u"\u3009", # RIGHT ANGLE BRACKET
   u"\\":  u"\u29F9", # BIG REVERSE SOLIDUS
   u"/":   u"\u29F8", # BIG SOLIDUS
-  u"?":   u"\u061F", # ARABIC QUESTION MARK
+  u"?":   u"\u2753", # BLACK QUESTION MARK ORNAMENT
   u"*":   u"\u204E", # LOWER ASTERISK
   u":":   u"\u0589", # ARMENIAN FULL STOP
   u"|":   u"\u01C0", # LATIN LETTER DENTAL CLICK
