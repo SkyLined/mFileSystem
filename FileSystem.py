@@ -1,6 +1,7 @@
 import os, shutil, time;
 # To solve any unicode errors you may get, add this line (without the "#") to your main python script:
 # import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
+from oVersionInformation import oVersionInformation;
 
 # Try again almost immediately, then wait longer and longer
 auPauses = [
