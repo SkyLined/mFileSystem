@@ -1,6 +1,7 @@
 import os, shutil, time;
 # To solve any unicode errors you may get, add this line (without the "#") to your main python script:
 # import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
+from mWindowsAPI import *;
 from oVersionInformation import oVersionInformation;
 
 # Try again almost immediately, then wait longer and longer
@@ -73,6 +74,28 @@ def fsPath(*asPathSections):
     # UNC path "\\..." => "\\?\UNC\..."
     return u"\\\\?\\UNC\\" + os.path.normpath(sPath[2:]).rstrip("\\");
   return u"\\\\?\\" + os.path.normpath(sPath[4:]).rstrip("\\");
+
+hProcessHeap = None;
+def fs83Path(*asPathSections):
+  global hProcessHeap;
+  if hProcessHeap is None:
+    hProcessHeap = KERNEL32.GetProcessHeap();
+    assert hProcessHeap != 0, \
+        "GetProcessHeap() => Error 0x%08X" % KERNEL32.GetLastError();
+  uRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(fsPath(*asPathSections), NULL, 0);
+  assert uRequiredBufferSizeInChars != 0, \
+        "GetShortPathNameW('...', NULL, 0) => Error 0x%08X" % KERNEL32.GetLastError();
+  sBuffer = WSTR(uRequiredBufferSizeInChars);
+  uUsedBufferSizeInChars = KERNEL32.GetShortPathNameW(fsPath(*asPathSections), sBuffer, uRequiredBufferSizeInChars);
+  assert uUsedBufferSizeInChars != 0, \
+      "GetShortPathNameW('...', 0x%08X, %d/0x%X) => Error 0x%08X" % \
+      (pBuffer, uRequiredBufferSizeInChars, uRequiredBufferSizeInChars, KERNEL32.GetLastError());
+  s83Path = str(sBuffer.value);
+  if s83Path.startswith("\\\\?\\"):
+    s83Path = s83Path[len("\\\\?\\"):];
+    if s83Path.startswith("UNC\\"):
+      s83Path = "\\" + s83Path[len("UNC"):];
+  return s83Path;
 
 def fsParentPath(*asPathSections):
   return os.path.dirname(fsPath(*asPathSections));

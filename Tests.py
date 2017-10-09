@@ -1,6 +1,15 @@
-import FileSystem;
 import codecs, os, sys;
 sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
+
+sModuleFolderPath = os.path.dirname(os.path.abspath(__file__));
+sBaseFolderPath = os.path.dirname(sModuleFolderPath);
+sys.path.extend([
+  sBaseFolderPath,
+  sModuleFolderPath,
+  os.path.join(sModuleFolderPath, "modules"),
+]);
+
+import FileSystem;
 
 sTempFolderPath = FileSystem.fsPath(os.environ["TEMP"]);
 sSpecialChars = 'test[[[\0\r\n"<>\\/?*:|]]]';
@@ -60,6 +69,11 @@ for bUnicode in [True, False]:
   print "    * Checking if file with special characters exists..."; 
   ebIsFileResult = FileSystem.febIsFile(sTempFolderPath, sTranslatedSpecialChars);
   assert ebIsFileResult is True, "Expected febIsFile result to be True, got %s" % repr(ebIsFileResult);
+  print "    * Checking if 8.3 path for file with special characters can be found..."; 
+  s83Path = FileSystem.fs83Path(sTempFolderPath, sTranslatedSpecialChars);
+  print "        => %s" % s83Path;
+  ebIsFileResult = FileSystem.febIsFile(s83Path);
+  assert ebIsFileResult is True, "Expected febIsFile result to be True, got %s" % repr(ebIsFileResult);
   print "    * Reading file with special characters..."; 
   esReadFileResult = FileSystem.fesReadDataFromFile(sTempFolderPath, sTranslatedSpecialChars);
   assert esReadFileResult == sData, "Expected febReadDataFromFile result to be %s, got %s" % (repr(sData), repr(esReadFileResult));
@@ -83,6 +97,11 @@ for bUnicode in [True, False]:
   print "    * Creating file with special characters in folder with special characters..."; 
   eWriteFileResult = FileSystem.feWriteDataToFile(sData, sTempFolderPath, sTranslatedSpecialChars, sTranslatedSpecialChars);
   assert eWriteFileResult is None, "Expected feWriteDataToFile result to be None, got %s" % repr(eWriteFileResult);
+  print "    * Checking if 8.3 path for file with special characters in folder with special characters can be found..."; 
+  s83Path = FileSystem.fs83Path(sTempFolderPath, sTranslatedSpecialChars, sTranslatedSpecialChars);
+  print "        => %s" % s83Path;
+  ebIsFileResult = FileSystem.febIsFile(s83Path);
+  assert ebIsFileResult is True, "Expected febIsFile result to be True, got %s" % repr(ebIsFileResult);
   print "    * Renaming folder with special characters..."; 
   eMoveFolderResult = FileSystem.feMoveFolder([sTempFolderPath, sTranslatedSpecialChars], [sTempFolderPath, "moved"]);
   assert eMoveFolderResult is None, "Expected feMoveFolder result to be None, got %s" % repr(eMoveFolderResult);
