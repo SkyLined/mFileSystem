@@ -76,11 +76,15 @@ def fsPath(*asPathSections):
   return u"\\\\?\\" + os.path.normpath(sPath[4:]).rstrip("\\");
 
 def fs83Path(*asPathSections):
-  uRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(fsPath(*asPathSections), NULL, 0);
+  sPath = fsPath(*asPathSections);
+  if not fbIsFolder(sPath) and not fbIsFile(sPath):
+    # This path does not exist; there is no 8.3 representation.
+    return None;
+  uRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, NULL, 0);
   assert uRequiredBufferSizeInChars != 0, \
         "GetShortPathNameW('...', NULL, 0) => Error 0x%08X" % KERNEL32.GetLastError();
   sBuffer = WSTR(uRequiredBufferSizeInChars);
-  uUsedBufferSizeInChars = KERNEL32.GetShortPathNameW(fsPath(*asPathSections), sBuffer, uRequiredBufferSizeInChars);
+  uUsedBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, sBuffer, uRequiredBufferSizeInChars);
   assert uUsedBufferSizeInChars != 0, \
       "GetShortPathNameW('...', 0x%08X, %d/0x%X) => Error 0x%08X" % \
       (pBuffer, uRequiredBufferSizeInChars, uRequiredBufferSizeInChars, KERNEL32.GetLastError());
