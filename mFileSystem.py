@@ -75,13 +75,7 @@ def fsPath(*asPathSections):
     return u"\\\\?\\UNC\\" + os.path.normpath(sPath[2:]).rstrip("\\");
   return u"\\\\?\\" + os.path.normpath(sPath[4:]).rstrip("\\");
 
-hProcessHeap = None;
 def fs83Path(*asPathSections):
-  global hProcessHeap;
-  if hProcessHeap is None:
-    hProcessHeap = KERNEL32.GetProcessHeap();
-    assert hProcessHeap != 0, \
-        "GetProcessHeap() => Error 0x%08X" % KERNEL32.GetLastError();
   uRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(fsPath(*asPathSections), NULL, 0);
   assert uRequiredBufferSizeInChars != 0, \
         "GetShortPathNameW('...', NULL, 0) => Error 0x%08X" % KERNEL32.GetLastError();
