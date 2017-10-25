@@ -6,9 +6,9 @@ assert oVersionMatch, \
   "Cannot check for updates: local version %s cannot be parsed" % sVersion;
 uVersion = long(re.sub(r"[\- \.:]", "", oVersionMatch.group(1)));
 
-sProjectName = "FileSystem";
+sProjectName = "mFileSystem";
 sUserName = "SkyLined";
-sRepositoryName = "FileSystem";
+sRepositoryName = "mFileSystem";
 sBranch = "master";
 
 def fsVersionCheck():
