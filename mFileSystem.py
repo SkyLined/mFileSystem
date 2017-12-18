@@ -362,8 +362,8 @@ def fesReadDataFromFile(*asPathSections, **dxArguments):
   finally:
     oFile.close();
 
-def fWriteDataToFile(*asPathSections, **dxArguments):
-  eResult = feWriteDataToFile(*asPathSections, **dxArguments);
+def fWriteDataToFile(sData, *asPathSections, **dxArguments):
+  eResult = feWriteDataToFile(sData, *asPathSections, **dxArguments);
   if eResult is None:
     return 
   raise eResult;
