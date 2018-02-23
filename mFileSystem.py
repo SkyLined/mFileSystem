@@ -1,10 +1,39 @@
-import os, shutil, time;
-# To solve any unicode errors you may get, add this line (without the "#") to your main python script:
-# import codecs,sys; sys.stdout = codecs.getwriter("cp437")(sys.stdout, "replace");
+import os, shutil, sys, time;
+
+# Augment the search path: look in main folder, parent folder or "modules" child folder, in that order.
+sMainFolderPath = os.path.dirname(os.path.abspath(__file__));
+sParentFolderPath = os.path.normpath(os.path.join(sMainFolderPath, ".."));
+sModulesFolderPath = os.path.join(sMainFolderPath, "modules");
+asOriginalSysPath = sys.path[:];
+sys.path = [sMainFolderPath, sParentFolderPath, sModulesFolderPath] + sys.path;
+
+# Load external dependecies to make sure they are available and shown an error
+# if any one fails to load. This error explains where the missing component
+# can be downloaded to fix the error.
+for (sModuleName, sURL) in {
+  "mWindowsAPI": "https://github.com/SkyLined/mWindowsAPI/",
+}.items():
+  try:
+    __import__(sModuleName, globals(), locals(), [], -1);
+  except ImportError as oError:
+    if oError.message == "No module named %s" % sModuleName:
+      print "*" * 80;
+      print "%s depends on %s which you can download at:" % (os.path.filename(__file__), sModuleName);
+      print "    %s" % sDownloadURL;
+      print "After downloading, please save the code in this folder:";
+      print "    %s" % os.path.join(sModuleFolderPath, sModuleName);
+      print " - or -";
+      print "    %s" % os.path.join(sParentFolderPath, sModuleName);
+      print "Once you have completed these steps, please try again.";
+      print "*" * 80;
+    raise;
+
+# Restore the search path
+sys.path = asOriginalSysPath;
+
 from mWindowsAPI.mDLLs import KERNEL32;
 from mWindowsAPI.mDefines import NULL;
 from mWindowsAPI.mFunctions import WSTR;
-from oVersionInformation import oVersionInformation;
 
 # Try again almost immediately, then wait longer and longer
 auPauses = [

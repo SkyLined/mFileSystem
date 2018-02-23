@@ -1,0 +1,16 @@
+{
+  "asDependentOnProductNames": [
+    "mProductDetails", 
+    "mWindowsAPI"
+  ], 
+  "oProductVersion": "2018-02-23 16:44", 
+  "oRepository": {
+    "sBranch": "master", 
+    "sRepositoryName": "mFileSystem", 
+    "sType": "GitHub", 
+    "sUserName": "SkyLined"
+  }, 
+  "sLicenseServerURL": "https://license.skylined.nl/fdxGetLicenseCheckResult.php", 
+  "sProductName": "mFileSystem", 
+  "sTrialPeriodDuration": "1m"
+}
