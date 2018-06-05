@@ -2,7 +2,7 @@
   "asDependentOnProductNames": [
     "mWindowsAPI"
   ], 
-  "oProductVersion": "2018-05-30 11:27", 
+  "oProductVersion": "2018-06-05 12:58", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "mFileSystem", 
