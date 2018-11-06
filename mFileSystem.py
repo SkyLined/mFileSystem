@@ -111,14 +111,14 @@ def fs83Path(*asPathSections):
   if not fbIsFolder(sPath) and not fbIsFile(sPath):
     # This path does not exist; there is no 8.3 representation.
     return None;
-  uRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, NULL, 0);
-  assert uRequiredBufferSizeInChars != 0, \
+  dwRequiredBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, NULL, 0);
+  assert dwRequiredBufferSizeInChars.value != 0, \
         "GetShortPathNameW('...', NULL, 0) => Error 0x%08X" % KERNEL32.GetLastError();
-  sBuffer = WSTR(uRequiredBufferSizeInChars);
-  uUsedBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, sBuffer, uRequiredBufferSizeInChars);
-  assert uUsedBufferSizeInChars != 0, \
+  sBuffer = WSTR(dwRequiredBufferSizeInChars.value);
+  dwUsedBufferSizeInChars = KERNEL32.GetShortPathNameW(sPath, sBuffer, dwRequiredBufferSizeInChars.value);
+  assert dwUsedBufferSizeInChars.value != 0, \
       "GetShortPathNameW('...', 0x%08X, %d/0x%X) => Error 0x%08X" % \
-      (pBuffer, uRequiredBufferSizeInChars, uRequiredBufferSizeInChars, KERNEL32.GetLastError());
+      (pBuffer, dwRequiredBufferSizeInChars.value, dwRequiredBufferSizeInChars.value, KERNEL32.GetLastError());
   s83Path = str(sBuffer.value);
   if s83Path.startswith("\\\\?\\"):
     s83Path = s83Path[len("\\\\?\\"):];
