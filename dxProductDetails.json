@@ -13,5 +13,5 @@
   "sProductAuthor": "SkyLined", 
   "sProductName": "mFileSystem", 
   "sProductURL": "https://github.com/SkyLined/mFileSystem", 
-  "sTrialPeriodDuration": "1m"
+  "oTrialPeriodDuration": "1m"
 }
